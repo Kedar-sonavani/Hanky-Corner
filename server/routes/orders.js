@@ -1,0 +1,153 @@
+const express = require('express');
+const router = express.Router();
+const { createClient } = require('@supabase/supabase-js');
+const adminCheck = require('../middleware/adminCheck');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);  
+
+/**
+ * POST /api/orders
+ * Public access to place an order
+ */
+router.post('/', async (req, res) => {
+  const { customer_name, customer_email, customer_phone, shipping_address, total_price, items } = req.body;
+
+  if (!customer_name || !customer_email || !shipping_address || !items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'Missing required order fields' });
+  }
+
+  try {
+    // 0. Verify stock availability for all items
+    for (const item of items) {
+      const { data: product, error: stockError } = await supabase
+        .from('products')
+        .select('stock, title')
+        .eq('id', item.product_id)
+        .single();
+
+      if (stockError || !product) {
+        return res.status(404).json({ error: `Product ${item.title || 'Unknown'} not found` });
+      }
+
+      if (product.stock < item.quantity) {
+        return res.status(400).json({ error: `Insufficient stock for ${product.title}. Available: ${product.stock}` });
+      }
+    }
+
+    // 1. Insert into orders table
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .insert([{ 
+        customer_name, 
+        customer_email, 
+        customer_phone, 
+        shipping_address, 
+        total_price 
+      }])
+      .select();
+
+    if (orderError) throw orderError;
+    const newOrder = orderData[0];
+
+    // 2. Insert into order_items table
+    const orderItems = items.map(item => ({
+      order_id: newOrder.id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price_at_purchase: item.price,
+      product_title: item.title
+    }));
+
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItems);
+
+    if (itemsError) throw itemsError;
+
+    // 3. Decrement stock for all items
+    for (const item of items) {
+      const { error: decError } = await supabase.rpc('decrement_stock', {
+        product_id: item.product_id,
+        quantity: item.quantity
+      });
+      if (decError) console.error('Error decrementing stock:', decError);
+    }
+
+    res.status(201).json({ message: 'Order placed successfully', order_id: newOrder.id });
+  } catch (err) {
+    console.error('Error placing order:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/orders
+ * Admin access to view all orders
+ */
+router.get('/', adminCheck, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('orders')
+            .select(`
+                *,
+                order_items (*)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        console.error('Error fetching orders:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * GET /api/orders/:id/items
+ * Admin access to view items of a specific order
+ */
+router.get('/:id/items', adminCheck, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('order_items')
+            .select('*')
+            .eq('order_id', req.params.id);
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        console.error('Error fetching order items:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * PUT /api/orders/:id
+ * Admin access to update order status or notes
+ */
+router.put('/:id', adminCheck, async (req, res) => {
+    const { status, admin_notes } = req.body;
+    try {
+        const updateData = {};
+        if (status) updateData.status = status;
+        if (admin_notes !== undefined) updateData.admin_notes = admin_notes;
+
+        const { data, error } = await supabase
+            .from('orders')
+            .update(updateData)
+            .eq('id', req.params.id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        console.error('Error updating order:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+module.exports = router;
