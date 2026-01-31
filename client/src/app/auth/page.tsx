@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Mail, Lock, User, ArrowRight, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
-export default function AuthPage() {
+function AuthContent() {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -138,5 +138,17 @@ export default function AuthPage() {
                 </p>
             </motion.div>
         </div>
+    );
+}
+
+export default function AuthPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-[80vh] flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+            </div>
+        }>
+            <AuthContent />
+        </Suspense>
     );
 }
