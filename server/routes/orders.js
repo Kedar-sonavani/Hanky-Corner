@@ -8,16 +8,39 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );  
 
+const validate = require('../middleware/validate');
+const authCheck = require('../middleware/authCheck');
+const { orderSchema } = require('../validators/schemas');
+
+/**
+ * GET /api/orders/mine
+ * User access to view their own orders based on JWT email
+ */
+router.get('/mine', authCheck, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        order_items (*)
+      `)
+      .eq('customer_email', req.user.email)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Error fetching user orders:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /**
  * POST /api/orders
  * Public access to place an order
  */
-router.post('/', async (req, res) => {
+router.post('/', validate(orderSchema), async (req, res) => {
   const { customer_name, customer_email, customer_phone, shipping_address, total_price, items } = req.body;
-
-  if (!customer_name || !customer_email || !shipping_address || !items || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Missing required order fields' });
-  }
 
   try {
     // 0. Verify stock availability for all items
@@ -67,13 +90,27 @@ router.post('/', async (req, res) => {
 
     if (itemsError) throw itemsError;
 
-    // 3. Decrement stock for all items
+    // 3. Decrement stock for all items atomically
+    const failedItems = [];
     for (const item of items) {
-      const { error: decError } = await supabase.rpc('decrement_stock', {
+      const { data: success, error: decError } = await supabase.rpc('decrement_stock', {
         product_id: item.product_id,
         quantity: item.quantity
       });
-      if (decError) console.error('Error decrementing stock:', decError);
+
+      if (decError || !success) {
+        failedItems.push(item.title || item.product_id);
+      }
+    }
+
+    if (failedItems.length > 0) {
+      // If we failed to decrement some items (likely due to a race condition where stock ran out)
+      // Note: In a production app, we would ideally roll back the order insertion here.
+      // For now, we notify the user.
+      return res.status(400).json({ 
+        error: `Order partially failed: Stock for ${failedItems.join(', ')} ran out during checkout. Please contact support.`,
+        order_id: newOrder.id 
+      });
     }
 
     res.status(201).json({ message: 'Order placed successfully', order_id: newOrder.id });

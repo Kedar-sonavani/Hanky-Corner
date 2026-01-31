@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from './AuthContext';
 
 // Define context shape
 interface MasterSwitchContextType {
@@ -14,6 +15,7 @@ interface MasterSwitchContextType {
 const MasterSwitchContext = createContext<MasterSwitchContextType | undefined>(undefined);
 
 export const MasterSwitchProvider = ({ children }: { children: React.ReactNode }) => {
+    const { session } = useAuth();
     const [isEcommerceActive, setIsEcommerceActive] = useState(false);
     const [whatsappNumber, setWhatsappNumber] = useState('917822832788');
     const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +45,7 @@ export const MasterSwitchProvider = ({ children }: { children: React.ReactNode }
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-admin-secret': 'AdminPASS' // Should be from auth later
+                    'Authorization': `Bearer ${session?.access_token}`
                 },
                 body: JSON.stringify(settings)
             });

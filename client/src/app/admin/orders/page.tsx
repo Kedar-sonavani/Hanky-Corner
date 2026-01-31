@@ -12,10 +12,13 @@ import {
     XCircle,
     ExternalLink,
     Search,
-    Filter
+    Filter,
+    Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface OrderItem {
     id: string;
@@ -54,17 +57,28 @@ const statusIcons = {
 };
 
 export default function AdminOrders() {
+    const { user, session, isAdmin, loading: authLoading } = useAuth();
+    const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Client-side Guard
+    useEffect(() => {
+        if (!authLoading && (!user || !isAdmin)) {
+            router.push('/');
+        }
+    }, [user, isAdmin, authLoading, router]);
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const fetchOrders = async () => {
         try {
             const res = await fetch(`${apiUrl}/api/orders`, {
-                headers: { 'x-admin-secret': 'AdminPASS' }
+                headers: {
+                    'Authorization': `Bearer ${session?.access_token}`
+                }
             });
             if (res.ok) {
                 const data = await res.json();
@@ -81,13 +95,21 @@ export default function AdminOrders() {
         fetchOrders();
     }, []);
 
+    if (authLoading || !user || !isAdmin) {
+        return (
+            <div className="h-screen flex items-center justify-center bg-white">
+                <Loader2 className="h-10 w-10 animate-spin text-zinc-900" />
+            </div>
+        );
+    }
+
     const updateStatus = async (orderId: string, newStatus: string) => {
         try {
             const res = await fetch(`${apiUrl}/api/orders/${orderId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-admin-secret': 'AdminPASS'
+                    'Authorization': `Bearer ${session?.access_token}`
                 },
                 body: JSON.stringify({ status: newStatus })
             });
@@ -109,16 +131,16 @@ export default function AdminOrders() {
     );
 
     return (
-        <div className="min-h-screen bg-zinc-50/50 py-12 px-6">
+        <div className="min-h-screen bg-muted/30 py-12 px-6">
             <div className="container max-w-7xl mx-auto space-y-8">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                        <Link href="/admin" className="text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-900 flex items-center gap-1 mb-2">
+                        <Link href="/admin" className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground flex items-center gap-1 mb-2">
                             <ChevronLeft className="h-3 w-3" /> Back to Dashboard
                         </Link>
-                        <h1 className="text-3xl font-light tracking-tight text-zinc-900 flex items-center gap-3">
-                            <Package className="h-8 w-8 text-zinc-600 stroke-[1.5px]" />
+                        <h1 className="text-3xl font-heading font-light tracking-tight text-foreground flex items-center gap-3">
+                            <Package className="h-8 w-8 text-muted-foreground stroke-[1.5px]" />
                             Order Management
                         </h1>
                     </div>
@@ -129,11 +151,11 @@ export default function AdminOrders() {
                     <div className="lg:col-span-8 space-y-4">
                         <div className="flex items-center gap-4 mb-6">
                             <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <input
                                     type="text"
                                     placeholder="Search by name, email or ID..."
-                                    className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:border-zinc-400 transition-all font-medium"
+                                    className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:border-primary transition-all font-medium text-foreground placeholder:text-muted-foreground/50"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -141,14 +163,14 @@ export default function AdminOrders() {
                         </div>
 
                         {loading ? (
-                            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-zinc-300">
-                                <div className="animate-spin h-8 w-8 border-4 border-zinc-900 border-t-transparent rounded-full mx-auto mb-4" />
-                                <p className="text-zinc-500 font-medium">Loading orders...</p>
+                            <div className="text-center py-20 bg-card rounded-3xl border border-dashed border-border">
+                                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                                <p className="text-muted-foreground font-medium">Loading orders...</p>
                             </div>
                         ) : filteredOrders.length === 0 ? (
-                            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-zinc-300">
-                                <Package className="h-12 w-12 text-zinc-200 mx-auto mb-4" />
-                                <p className="text-zinc-500 font-medium">No orders found.</p>
+                            <div className="text-center py-20 bg-card rounded-3xl border border-dashed border-border">
+                                <Package className="h-12 w-12 text-muted mx-auto mb-4" />
+                                <p className="text-muted-foreground font-medium">No orders found.</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -160,8 +182,8 @@ export default function AdminOrders() {
                                             key={order.id}
                                             onClick={() => setSelectedOrder(order)}
                                             className={`group p-6 rounded-2xl border transition-all cursor-pointer ${selectedOrder?.id === order.id
-                                                    ? 'bg-zinc-900 border-zinc-900 text-white shadow-xl shadow-zinc-200'
-                                                    : 'bg-white border-zinc-200 hover:border-zinc-400'
+                                                ? 'bg-primary border-primary text-primary-foreground shadow-xl shadow-primary/20'
+                                                : 'bg-card border-border hover:border-primary/50'
                                                 }`}
                                         >
                                             <div className="flex items-center justify-between">
@@ -169,13 +191,13 @@ export default function AdminOrders() {
                                                     <div className="flex items-center gap-3">
                                                         <span className="text-xs font-bold uppercase tracking-widest opacity-50">#{order.id.slice(0, 8)}</span>
                                                         <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${selectedOrder?.id === order.id
-                                                                ? 'border-white/20 bg-white/10 text-white'
-                                                                : statusColors[order.status]
+                                                            ? 'border-white/20 bg-white/10 text-white'
+                                                            : statusColors[order.status]
                                                             }`}>
                                                             {order.status}
                                                         </span>
                                                     </div>
-                                                    <h3 className="font-bold text-lg">{order.customer_name}</h3>
+                                                    <h3 className="font-heading font-bold text-lg">{order.customer_name}</h3>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-xl font-light tracking-tighter">₹{order.total_price.toLocaleString('en-IN')}</p>
@@ -202,11 +224,11 @@ export default function AdminOrders() {
                                     exit={{ opacity: 0, x: 20 }}
                                     className="sticky top-24 space-y-6"
                                 >
-                                    <Card className="border-zinc-200 rounded-[2rem] shadow-sm bg-white overflow-hidden">
-                                        <CardHeader className="border-b border-zinc-50 p-8">
-                                            <CardTitle className="text-sm font-bold uppercase tracking-widest text-zinc-900 flex items-center justify-between">
+                                    <Card className="border-border rounded-[2rem] shadow-sm bg-card overflow-hidden">
+                                        <CardHeader className="border-b border-border p-8 bg-muted/20">
+                                            <CardTitle className="text-sm font-bold uppercase tracking-widest text-foreground flex items-center justify-between">
                                                 Order Details
-                                                <button onClick={() => setSelectedOrder(null)} className="text-zinc-400 hover:text-zinc-900">
+                                                <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-foreground">
                                                     <XCircle size={20} className="stroke-[1.5px]" />
                                                 </button>
                                             </CardTitle>
@@ -214,7 +236,7 @@ export default function AdminOrders() {
                                         <CardContent className="p-8 space-y-8">
                                             {/* Status Update */}
                                             <div className="space-y-3">
-                                                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Update Status</label>
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Update Status</label>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     {Object.keys(statusColors).map((s) => (
                                                         <button
@@ -224,8 +246,8 @@ export default function AdminOrders() {
                                                                 updateStatus(selectedOrder.id, s);
                                                             }}
                                                             className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${selectedOrder.status === s
-                                                                    ? 'bg-zinc-900 border-zinc-900 text-white'
-                                                                    : 'bg-zinc-50 border-zinc-200 text-zinc-500 hover:border-zinc-400'
+                                                                ? 'bg-primary border-primary text-primary-foreground'
+                                                                : 'bg-background border-border text-muted-foreground hover:border-primary/50'
                                                                 }`}
                                                         >
                                                             {s}
@@ -237,44 +259,44 @@ export default function AdminOrders() {
                                             {/* Customer Info */}
                                             <div className="space-y-4">
                                                 <div className="space-y-1">
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Customer</p>
-                                                    <p className="font-bold text-sm text-zinc-900">{selectedOrder.customer_name}</p>
-                                                    <p className="text-sm text-zinc-600 font-medium">{selectedOrder.customer_email}</p>
-                                                    <p className="text-sm text-zinc-600 font-medium">{selectedOrder.customer_phone}</p>
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Customer</p>
+                                                    <p className="font-bold text-sm text-foreground">{selectedOrder.customer_name}</p>
+                                                    <p className="text-sm text-muted-foreground font-medium">{selectedOrder.customer_email}</p>
+                                                    <p className="text-sm text-muted-foreground font-medium">{selectedOrder.customer_phone}</p>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Shipping Address</p>
-                                                    <p className="text-sm text-zinc-800 leading-relaxed font-medium">{selectedOrder.shipping_address}</p>
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Shipping Address</p>
+                                                    <p className="text-sm text-foreground leading-relaxed font-medium">{selectedOrder.shipping_address}</p>
                                                 </div>
                                             </div>
 
                                             {/* Items */}
-                                            <div className="space-y-4 border-t border-zinc-100 pt-6">
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Order Items</p>
+                                            <div className="space-y-4 border-t border-border pt-6">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Order Items</p>
                                                 <div className="space-y-4">
                                                     {selectedOrder.order_items.map((item) => (
                                                         <div key={item.id} className="flex justify-between items-start gap-4">
                                                             <div className="flex-1 min-w-0">
-                                                                <p className="font-bold text-sm text-zinc-900 line-clamp-1">{item.product_title}</p>
-                                                                <p className="text-xs text-zinc-500 font-medium">Qty: {item.quantity} × ₹{item.price_at_purchase}</p>
+                                                                <p className="font-bold text-sm text-foreground line-clamp-1">{item.product_title}</p>
+                                                                <p className="text-xs text-muted-foreground font-medium">Qty: {item.quantity} × ₹{item.price_at_purchase}</p>
                                                             </div>
-                                                            <p className="font-bold text-sm text-zinc-900">₹{item.quantity * item.price_at_purchase}</p>
+                                                            <p className="font-bold text-sm text-foreground">₹{item.quantity * item.price_at_purchase}</p>
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <div className="pt-4 border-t border-zinc-100 flex justify-between items-end">
-                                                    <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Total Revenue</p>
-                                                    <p className="text-2xl font-light tracking-tighter text-zinc-900">₹{selectedOrder.total_price.toLocaleString('en-IN')}</p>
+                                                <div className="pt-4 border-t border-border flex justify-between items-end">
+                                                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Total Revenue</p>
+                                                    <p className="text-2xl font-light tracking-tighter text-foreground font-heading">₹{selectedOrder.total_price.toLocaleString('en-IN')}</p>
                                                 </div>
                                             </div>
                                         </CardContent>
                                     </Card>
                                 </motion.div>
                             ) : (
-                                <div className="h-full flex items-center justify-center p-12 border-2 border-dashed border-zinc-200 rounded-[2rem] text-center">
+                                <div className="h-full flex items-center justify-center p-12 border-2 border-dashed border-border rounded-[2rem] text-center bg-card">
                                     <div className="space-y-2">
-                                        <Package className="h-10 w-10 text-zinc-200 mx-auto stroke-[1.5px]" />
-                                        <p className="text-sm text-zinc-400 font-medium">Select an order to view details and update status.</p>
+                                        <Package className="h-10 w-10 text-muted mx-auto stroke-[1.5px]" />
+                                        <p className="text-sm text-muted-foreground font-medium">Select an order to view details and update status.</p>
                                     </div>
                                 </div>
                             )}
