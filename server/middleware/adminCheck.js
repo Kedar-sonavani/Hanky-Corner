@@ -29,9 +29,13 @@ const adminCheck = async (req, res, next) => {
       return res.status(401).json({ error: 'Unauthorized: Invalid Token' });
     }
 
-    // In a real app, you might check a specific claim or role table here.
-    // For now, any authenticated user is treated as admin for this specific route scope
-    // OR strictly enforce only specific UUIDs.
+    // Strict Admin Detection
+    const isAdmin = user.user_metadata?.role === 'admin' || user.email === 'admin@hankycorner.com';
+    
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Forbidden: Admin Privileges Required' });
+    }
+
     return next();
   }
 

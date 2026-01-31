@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { MasterSwitchProvider } from '@/context/MasterSwitchContext';
 import { CartProvider } from '@/context/CartContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { cn } from '@/lib/utils';
 
-const inter = Inter({ subsets: ['latin'] });
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-plus-jakarta' });
 
 export const metadata: Metadata = {
   title: 'Hanky Corner | Premium Handcrafted Linens',
@@ -21,17 +24,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={cn(inter.className, "antialiased")}>
-        <MasterSwitchProvider>
-          <CartProvider>
-            <ToastProvider>
-              <div className="relative flex min-h-screen flex-col">
-                <Navbar />
-                <main className="flex-1">{children}</main>
-              </div>
-            </ToastProvider>
-          </CartProvider>
-        </MasterSwitchProvider>
+      <body className={cn(outfit.variable, plusJakarta.variable, "font-sans antialiased bg-background text-foreground")}>
+        <AuthProvider>
+          <MasterSwitchProvider>
+            <CartProvider>
+              <ToastProvider>
+                <div className="relative flex min-h-screen flex-col">
+                  <Navbar />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                </div>
+              </ToastProvider>
+            </CartProvider>
+          </MasterSwitchProvider>
+        </AuthProvider>
       </body>
     </html>
   );

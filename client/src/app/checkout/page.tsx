@@ -8,6 +8,8 @@ import { ShoppingBag, ChevronLeft, CheckCircle2, Package, Truck, ShieldCheck, Al
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 // Toast notification component (you can replace with your preferred library like sonner or react-hot-toast)
 const useToast = () => {
@@ -57,6 +59,7 @@ const ToastContainer = ({ toasts }: { toasts: Array<{ id: number; message: strin
 
 export default function CheckoutPage() {
     const { cartItems, cartTotal, clearCart } = useCart();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast, toasts } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,8 +73,27 @@ export default function CheckoutPage() {
         city: '',
         pincode: ''
     });
+
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+    // Auth Guard
+    React.useEffect(() => {
+        if (!authLoading && !user) {
+            router.push('/auth?redirect=/checkout');
+        }
+    }, [user, authLoading, router]);
+
+    // Initial Data Population
+    React.useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                email: user.email || '',
+                name: user.user_metadata?.full_name || ''
+            }));
+        }
+    }, [user]);
 
     // Validation functions
     const validateEmail = (email: string): boolean => {
@@ -221,36 +243,36 @@ export default function CheckoutPage() {
                     className="space-y-6"
                 >
                     <div className="flex justify-center">
-                        <div className="bg-green-100 dark:bg-green-900/30 p-6 rounded-full">
-                            <CheckCircle2 className="h-16 w-16 text-green-600" />
+                        <div className="bg-primary/10 p-6 rounded-full">
+                            <CheckCircle2 className="h-16 w-16 text-primary" />
                         </div>
                     </div>
-                    <h1 className="text-4xl font-extrabold tracking-tight">Order Placed Successfully!</h1>
+                    <h1 className="text-4xl font-heading font-extrabold tracking-tight text-foreground">Order Placed Successfully!</h1>
 
                     {orderNumber && (
-                        <div className="inline-block bg-zinc-100 dark:bg-zinc-800 px-6 py-3 rounded-lg">
-                            <p className="text-sm text-zinc-500 font-medium">Order Number</p>
-                            <p className="text-2xl font-bold tracking-wider">{orderNumber}</p>
+                        <div className="inline-block bg-muted px-6 py-3 rounded-lg border border-border">
+                            <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">Order Number</p>
+                            <p className="text-2xl font-bold tracking-wider text-foreground">{orderNumber}</p>
                         </div>
                     )}
 
-                    <p className="text-zinc-500 text-lg max-w-md mx-auto">
+                    <p className="text-muted-foreground text-lg max-w-md mx-auto leading-relaxed">
                         Thank you for shopping with Hanky Corner. We've received your order and will contact you shortly for confirmation.
                     </p>
 
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 max-w-md mx-auto">
-                        <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-2">What's Next?</h3>
-                        <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-2 text-left">
+                    <div className="bg-card border border-border rounded-xl p-6 max-w-md mx-auto shadow-sm">
+                        <h3 className="font-bold text-foreground mb-2">What's Next?</h3>
+                        <ul className="text-sm text-muted-foreground space-y-2 text-left">
                             <li className="flex items-start gap-2">
-                                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
                                 <span>You'll receive a confirmation call within 24 hours</span>
                             </li>
                             <li className="flex items-start gap-2">
-                                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
                                 <span>Payment options will be discussed on the call</span>
                             </li>
                             <li className="flex items-start gap-2">
-                                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
                                 <span>Expected delivery: 5-7 business days</span>
                             </li>
                         </ul>
@@ -258,7 +280,7 @@ export default function CheckoutPage() {
 
                     <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center">
                         <Link href="/">
-                            <Button className="font-bold px-10 py-6 text-lg w-full sm:w-auto">
+                            <Button className="font-bold px-10 py-6 text-lg w-full sm:w-auto shadow-xl shadow-primary/20">
                                 Continue Shopping
                             </Button>
                         </Link>
@@ -268,14 +290,24 @@ export default function CheckoutPage() {
         );
     }
 
+    if (authLoading) {
+        return (
+            <div className="h-[60vh] flex items-center justify-center">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            </div>
+        );
+    }
+
     if (cartItems.length === 0) {
         return (
             <div className="container py-24 text-center space-y-6">
-                <ShoppingBag className="mx-auto h-16 w-16 text-zinc-300" />
-                <h1 className="text-3xl font-bold">Your cart is empty</h1>
-                <p className="text-zinc-500">Add some premium handkerchiefs to your cart to checkout.</p>
+                <div className="bg-secondary p-8 rounded-full inline-block">
+                    <ShoppingBag className="h-16 w-16 text-muted-foreground/50" />
+                </div>
+                <h1 className="text-3xl font-heading font-bold text-foreground">Your cart is empty</h1>
+                <p className="text-muted-foreground text-lg">Add some premium handkerchiefs to your cart to checkout.</p>
                 <Link href="/">
-                    <Button variant="outline" className="font-bold">Return to Shop</Button>
+                    <Button variant="outline" className="font-bold border-2 border-border px-8 py-6">Return to Shop</Button>
                 </Link>
             </div>
         );
@@ -288,7 +320,7 @@ export default function CheckoutPage() {
             <div className="container py-12 max-w-6xl">
                 <Link
                     href="/"
-                    className="inline-flex items-center text-sm font-bold text-zinc-500 hover:text-primary mb-8 transition-colors"
+                    className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary mb-8 transition-colors uppercase tracking-widest"
                     aria-label="Return to shopping page"
                 >
                     <ChevronLeft className="h-4 w-4 mr-1" />
@@ -299,13 +331,13 @@ export default function CheckoutPage() {
                     {/* Checkout Form */}
                     <div className="lg:col-span-7 space-y-8">
                         <div>
-                            <h1 className="text-3xl font-extrabold tracking-tighter mb-2">Checkout</h1>
-                            <p className="text-zinc-500">Complete your details to place your order.</p>
+                            <h1 className="text-3xl font-heading font-extrabold tracking-tight mb-2 text-foreground">Checkout</h1>
+                            <p className="text-muted-foreground">Complete your details to place your order.</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                             <div className="space-y-4">
-                                <h2 className="text-xl font-bold flex items-center gap-2">
+                                <h2 className="text-xl font-heading font-bold flex items-center gap-2 text-foreground">
                                     <Truck className="h-5 w-5 text-primary" />
                                     Shipping Information
                                 </h2>
@@ -315,7 +347,7 @@ export default function CheckoutPage() {
                                     <div className="space-y-2">
                                         <label
                                             htmlFor="name"
-                                            className="text-xs font-bold uppercase tracking-widest text-zinc-500"
+                                            className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                                         >
                                             Full Name *
                                         </label>
@@ -326,14 +358,14 @@ export default function CheckoutPage() {
                                             value={formData.name}
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
-                                            className={`w-full p-3 bg-zinc-50 dark:bg-gray-100 border rounded-lg focus:ring-2 ring-primary/20 outline-none transition-all ${errors.name && touched.name ? 'border-red-500' : ''
+                                            className={`w-full p-4 bg-background border border-border rounded-xl focus:ring-2 ring-primary/20 outline-none transition-all ${errors.name && touched.name ? 'border-destructive' : ''
                                                 }`}
                                             placeholder="John Doe"
                                             aria-invalid={errors.name && touched.name ? 'true' : 'false'}
                                             aria-describedby={errors.name && touched.name ? 'name-error' : undefined}
                                         />
                                         {errors.name && touched.name && (
-                                            <p id="name-error" className="text-xs text-red-500 flex items-center gap-1">
+                                            <p id="name-error" className="text-xs text-destructive flex items-center gap-1 font-bold">
                                                 <AlertCircle className="h-3 w-3" />
                                                 {errors.name}
                                             </p>
@@ -344,7 +376,7 @@ export default function CheckoutPage() {
                                     <div className="space-y-2">
                                         <label
                                             htmlFor="email"
-                                            className="text-xs font-bold uppercase tracking-widest text-zinc-500"
+                                            className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                                         >
                                             Email Address *
                                         </label>
@@ -355,14 +387,14 @@ export default function CheckoutPage() {
                                             value={formData.email}
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
-                                            className={`w-full p-3 bg-zinc-50 dark:bg-gray-100 border rounded-lg focus:ring-2 ring-primary/20 outline-none transition-all ${errors.email && touched.email ? 'border-red-500' : ''
+                                            className={`w-full p-4 bg-background border border-border rounded-xl focus:ring-2 ring-primary/20 outline-none transition-all ${errors.email && touched.email ? 'border-destructive' : ''
                                                 }`}
                                             placeholder="john@example.com"
                                             aria-invalid={errors.email && touched.email ? 'true' : 'false'}
                                             aria-describedby={errors.email && touched.email ? 'email-error' : undefined}
                                         />
                                         {errors.email && touched.email && (
-                                            <p id="email-error" className="text-xs text-red-500 flex items-center gap-1">
+                                            <p id="email-error" className="text-xs text-destructive flex items-center gap-1 font-bold">
                                                 <AlertCircle className="h-3 w-3" />
                                                 {errors.email}
                                             </p>
@@ -373,7 +405,7 @@ export default function CheckoutPage() {
                                     <div className="space-y-2 sm:col-span-2">
                                         <label
                                             htmlFor="phone"
-                                            className="text-xs font-bold uppercase tracking-widest text-zinc-500"
+                                            className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                                         >
                                             Phone Number *
                                         </label>
@@ -384,14 +416,14 @@ export default function CheckoutPage() {
                                             value={formData.phone}
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
-                                            className={`w-full p-3 bg-zinc-50 dark:bg-gray-100 border rounded-lg focus:ring-2 ring-primary/20 outline-none transition-all ${errors.phone && touched.phone ? 'border-red-500' : ''
+                                            className={`w-full p-4 bg-background border border-border rounded-xl focus:ring-2 ring-primary/20 outline-none transition-all ${errors.phone && touched.phone ? 'border-destructive' : ''
                                                 }`}
                                             placeholder="+91 98765 43210"
                                             aria-invalid={errors.phone && touched.phone ? 'true' : 'false'}
                                             aria-describedby={errors.phone && touched.phone ? 'phone-error' : undefined}
                                         />
                                         {errors.phone && touched.phone && (
-                                            <p id="phone-error" className="text-xs text-red-500 flex items-center gap-1">
+                                            <p id="phone-error" className="text-xs text-destructive flex items-center gap-1 font-bold">
                                                 <AlertCircle className="h-3 w-3" />
                                                 {errors.phone}
                                             </p>
@@ -402,7 +434,7 @@ export default function CheckoutPage() {
                                     <div className="space-y-2 sm:col-span-2">
                                         <label
                                             htmlFor="address"
-                                            className="text-xs font-bold uppercase tracking-widest text-zinc-500"
+                                            className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                                         >
                                             Detailed Address *
                                         </label>
@@ -413,14 +445,14 @@ export default function CheckoutPage() {
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
                                             rows={3}
-                                            className={`w-full p-3 bg-zinc-50 dark:bg-gray-100 border rounded-lg focus:ring-2 ring-primary/20 outline-none transition-all ${errors.address && touched.address ? 'border-red-500' : ''
+                                            className={`w-full p-4 bg-background border border-border rounded-xl focus:ring-2 ring-primary/20 outline-none transition-all ${errors.address && touched.address ? 'border-destructive' : ''
                                                 }`}
                                             placeholder="House No, Street name, Landmark"
                                             aria-invalid={errors.address && touched.address ? 'true' : 'false'}
                                             aria-describedby={errors.address && touched.address ? 'address-error' : undefined}
                                         />
                                         {errors.address && touched.address && (
-                                            <p id="address-error" className="text-xs text-red-500 flex items-center gap-1">
+                                            <p id="address-error" className="text-xs text-destructive flex items-center gap-1 font-bold">
                                                 <AlertCircle className="h-3 w-3" />
                                                 {errors.address}
                                             </p>
@@ -431,7 +463,7 @@ export default function CheckoutPage() {
                                     <div className="space-y-2">
                                         <label
                                             htmlFor="city"
-                                            className="text-xs font-bold uppercase tracking-widest text-zinc-500"
+                                            className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                                         >
                                             City *
                                         </label>
@@ -442,14 +474,14 @@ export default function CheckoutPage() {
                                             value={formData.city}
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
-                                            className={`w-full p-3 bg-zinc-50 dark:bg-gray-100 border rounded-lg focus:ring-2 ring-primary/20 outline-none transition-all ${errors.city && touched.city ? 'border-red-500' : ''
+                                            className={`w-full p-4 bg-background border border-border rounded-xl focus:ring-2 ring-primary/20 outline-none transition-all ${errors.city && touched.city ? 'border-destructive' : ''
                                                 }`}
                                             placeholder="Mumbai"
                                             aria-invalid={errors.city && touched.city ? 'true' : 'false'}
                                             aria-describedby={errors.city && touched.city ? 'city-error' : undefined}
                                         />
                                         {errors.city && touched.city && (
-                                            <p id="city-error" className="text-xs text-red-500 flex items-center gap-1">
+                                            <p id="city-error" className="text-xs text-destructive flex items-center gap-1 font-bold">
                                                 <AlertCircle className="h-3 w-3" />
                                                 {errors.city}
                                             </p>
@@ -460,7 +492,7 @@ export default function CheckoutPage() {
                                     <div className="space-y-2">
                                         <label
                                             htmlFor="pincode"
-                                            className="text-xs font-bold uppercase tracking-widest text-zinc-500"
+                                            className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
                                         >
                                             Pincode *
                                         </label>
@@ -473,14 +505,14 @@ export default function CheckoutPage() {
                                             value={formData.pincode}
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
-                                            className={`w-full p-3 bg-zinc-50 dark:bg-gray-100 border rounded-lg focus:ring-2 ring-primary/20 outline-none transition-all ${errors.pincode && touched.pincode ? 'border-red-500' : ''
+                                            className={`w-full p-4 bg-background border border-border rounded-xl focus:ring-2 ring-primary/20 outline-none transition-all ${errors.pincode && touched.pincode ? 'border-destructive' : ''
                                                 }`}
                                             placeholder="400001"
                                             aria-invalid={errors.pincode && touched.pincode ? 'true' : 'false'}
                                             aria-describedby={errors.pincode && touched.pincode ? 'pincode-error' : undefined}
                                         />
                                         {errors.pincode && touched.pincode && (
-                                            <p id="pincode-error" className="text-xs text-red-500 flex items-center gap-1">
+                                            <p id="pincode-error" className="text-xs text-destructive flex items-center gap-1 font-bold">
                                                 <AlertCircle className="h-3 w-3" />
                                                 {errors.pincode}
                                             </p>
@@ -489,20 +521,20 @@ export default function CheckoutPage() {
                                 </div>
                             </div>
 
-                            <div className="p-6 bg-zinc-50 rounded-xl border border-zinc-100 shadow-sm">
+                            <div className="p-6 bg-card rounded-xl border border-border shadow-sm">
                                 <div className="flex gap-4">
                                     {/* Icon with a clean white circular background */}
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white border border-zinc-200 shadow-sm">
-                                        <ShieldCheck className="h-5 w-5 text-zinc-900" />
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background border border-border shadow-sm">
+                                        <ShieldCheck className="h-5 w-5 text-primary" />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <h4 className="text-sm font-bold uppercase tracking-widest text-zinc-900">
+                                        <h4 className="text-sm font-bold uppercase tracking-widest text-foreground">
                                             Payment Verification
                                         </h4>
-                                        <p className="text-sm leading-relaxed text-zinc-600">
+                                        <p className="text-sm leading-relaxed text-muted-foreground">
                                             To ensure a secure transaction, our team will personally contact you via call within
-                                            <span className="text-zinc-900 font-semibold"> 24 hours </span>
+                                            <span className="text-foreground font-semibold"> 24 hours </span>
                                             to confirm your order and provide payment details for <span className="italic">Bank Transfer</span> or <span className="italic">COD</span>.
                                         </p>
                                     </div>
@@ -511,7 +543,7 @@ export default function CheckoutPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full py-8 text-lg font-bold shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full py-8 text-lg font-bold shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
                                 disabled={isSubmitting}
                                 aria-busy={isSubmitting}
                             >
@@ -532,13 +564,13 @@ export default function CheckoutPage() {
 
                     {/* Order Summary */}
                     <div className="lg:col-span-5">
-                        <div className="sticky top-24 border border-zinc-200 rounded-3xl p-8 bg-white shadow-sm space-y-8">
-                            <header className="flex items-center justify-between border-b border-zinc-100 pb-6">
-                                <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-900 flex items-center gap-3">
-                                    <Package className="h-4 w-4 text-zinc-400" />
+                        <div className="sticky top-24 border border-border rounded-3xl p-8 bg-card shadow-lg shadow-primary/5 space-y-8">
+                            <header className="flex items-center justify-between border-b border-border pb-6">
+                                <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-foreground flex items-center gap-3">
+                                    <Package className="h-4 w-4 text-primary" />
                                     Summary
                                 </h2>
-                                <span className="text-xs font-medium px-2 py-1 bg-zinc-100 rounded-md text-zinc-600">
+                                <span className="text-xs font-medium px-2 py-1 bg-secondary rounded-md text-muted-foreground">
                                     {cartItems.length} {cartItems.length === 1 ? 'Item' : 'Items'}
                                 </span>
                             </header>
@@ -547,7 +579,7 @@ export default function CheckoutPage() {
                             <div className="max-h-[380px] overflow-y-auto pr-3 space-y-6 custom-scrollbar">
                                 {cartItems.map((item) => (
                                     <div key={item.id} className="flex gap-4 group items-center">
-                                        <div className="h-20 w-16 relative rounded-xl overflow-hidden border border-zinc-100 bg-zinc-50 flex-shrink-0 grayscale group-hover:grayscale-0 transition-all duration-500">
+                                        <div className="h-20 w-16 relative rounded-xl overflow-hidden border border-border bg-muted flex-shrink-0 grayscale group-hover:grayscale-0 transition-all duration-500">
                                             <Image
                                                 src={item.image}
                                                 alt={item.title}
@@ -557,15 +589,15 @@ export default function CheckoutPage() {
                                             />
                                         </div>
                                         <div className="flex-1 min-w-0 space-y-1">
-                                            <h3 className="font-semibold text-sm text-zinc-900 line-clamp-1 group-hover:text-zinc-600 transition-colors">
+                                            <h3 className="font-heading font-bold text-sm text-foreground line-clamp-1 group-hover:text-primary transition-colors">
                                                 {item.title}
                                             </h3>
-                                            <p className="text-zinc-400 text-xs font-medium tracking-wide">
+                                            <p className="text-muted-foreground text-xs font-medium tracking-wide">
                                                 Quantity: {item.quantity}
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-bold text-sm text-zinc-900">
+                                            <p className="font-bold text-sm text-foreground">
                                                 ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                                             </p>
                                         </div>
@@ -574,20 +606,20 @@ export default function CheckoutPage() {
                             </div>
 
                             {/* Pricing Calculation */}
-                            <div className="space-y-4 pt-8 border-t border-zinc-100">
+                            <div className="space-y-4 pt-8 border-t border-border">
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-zinc-500">Subtotal</span>
-                                    <span className="font-medium text-zinc-900">₹{cartTotal.toLocaleString('en-IN')}</span>
+                                    <span className="text-muted-foreground">Subtotal</span>
+                                    <span className="font-medium text-foreground">₹{cartTotal.toLocaleString('en-IN')}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-zinc-500">Shipping</span>
-                                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Calculated at call</span>
+                                    <span className="text-muted-foreground">Shipping</span>
+                                    <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50">Calculated at call</span>
                                 </div>
 
                                 <div className="flex justify-between items-end pt-4">
                                     <div className="space-y-0.5">
-                                        <span className="block text-xs font-bold uppercase tracking-widest text-zinc-400">Total Amount</span>
-                                        <span className="text-3xl font-light tracking-tighter text-zinc-900">
+                                        <span className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Total Amount</span>
+                                        <span className="text-3xl font-light tracking-tighter text-foreground font-heading">
                                             ₹{cartTotal.toLocaleString('en-IN')}
                                         </span>
                                     </div>
@@ -596,8 +628,8 @@ export default function CheckoutPage() {
 
                             {/* Trust Badge */}
                             <div className="pt-2">
-                                <div className="flex items-center justify-center gap-3 py-4 bg-zinc-50 rounded-2xl border border-zinc-100/50 text-[10px] uppercase tracking-[0.15em] text-zinc-400 font-bold">
-                                    <ShieldCheck className="h-3.5 w-3.5" />
+                                <div className="flex items-center justify-center gap-3 py-4 bg-muted/30 rounded-2xl border border-dashed border-border text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-bold">
+                                    <ShieldCheck className="h-3.5 w-3.5 text-primary" />
                                     Secure Checkout Guaranteed
                                 </div>
                             </div>

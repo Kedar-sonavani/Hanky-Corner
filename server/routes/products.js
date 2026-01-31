@@ -8,6 +8,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
+const validate = require('../middleware/validate');
+const { productSchema } = require('../validators/schemas');
+
 // Helper: Check if product is within last 30 days (NEW badge)
 function isWithinLast30Days(dateString) {
   const thirtyDaysAgo = new Date();
@@ -160,23 +163,14 @@ router.get('/:id/related', async (req, res) => {
 
 // POST /api/products
 // Admin only. Create a new product.
-router.post('/', adminCheck, async (req, res) => {
-  const { title, description, price, discount_price, stock, images, is_featured, category_ids } = req.body;
-
-  // Validation: Price can be 0, so check for undefined/null/empty string
-  const isPriceValid = price !== undefined && price !== null && price !== '';
-  if (!title || !isPriceValid || !images || !Array.isArray(images) || images.length === 0) {
-    console.warn('Product Validation Failed:', { title: !!title, price: isPriceValid, images: !!images, imagesArray: Array.isArray(images), count: images?.length });
-    return res.status(400).json({ 
-      error: 'Missing required fields: title, price, images (must be a non-empty array)' 
-    });
-  }
+router.post('/', adminCheck, validate(productSchema), async (req, res) => {
+  const { title, description, price, discount_price, stock, images, is_featured, category_ids, material, care_instructions, origin, manufacturer, weight } = req.body;
 
   try {
     // 1. Insert product
     const { data: productData, error: productError } = await supabase
       .from('products')
-      .insert([{ title, description, price, discount_price, stock: stock || 0, images, is_featured: is_featured || false }])
+      .insert([{ title, description, price, discount_price, stock: stock || 0, images, is_featured: is_featured || false, material, care_instructions, origin, manufacturer, weight }])
       .select();
 
     if (productError) throw productError;
@@ -204,15 +198,15 @@ router.post('/', adminCheck, async (req, res) => {
 
 // PUT /api/products/:id
 // Admin only. Update an existing product.
-router.put('/:id', adminCheck, async (req, res) => {
-  const { title, description, price, discount_price, stock, images, is_featured, category_ids } = req.body;
+router.put('/:id', adminCheck, validate(productSchema), async (req, res) => {
+  const { title, description, price, discount_price, stock, images, is_featured, category_ids, material, care_instructions, origin, manufacturer, weight } = req.body;
   const { id } = req.params;
 
   try {
     // 1. Update product basic details
     const { data: productData, error: productError } = await supabase
       .from('products')
-      .update({ title, description, price, discount_price, stock, images, is_featured })
+      .update({ title, description, price, discount_price, stock, images, is_featured, material, care_instructions, origin, manufacturer, weight })
       .eq('id', id)
       .select();
 
@@ -296,6 +290,24 @@ router.delete('/:id', adminCheck, async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Check if the product is part of any active orders (Processing, Shipped, Pending)
+    const { data: orderItems, error: checkError } = await supabase
+        .from('order_items')
+        .select(`
+            order_id,
+            orders!inner(status)
+        `)
+        .eq('product_id', id)
+        .in('orders.status', ['pending', 'processing', 'shipped']);
+
+    if (checkError) {
+        console.error('Error checking active orders:', checkError);
+    } else if (orderItems && orderItems.length > 0) {
+        return res.status(400).json({ 
+            error: 'Cannot delete product: It is part of an active order (Pending, Processing, or Shipped). Please complete or cancel those orders first.' 
+        });
+    }
+
     const { error } = await supabase
         .from('products')
         .delete()

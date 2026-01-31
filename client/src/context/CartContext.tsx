@@ -14,7 +14,7 @@ interface CartItem {
 
 interface CartContextType {
     cartItems: CartItem[];
-    addItem: (item: CartItem) => void;
+    addItem: (item: CartItem) => { success: boolean; message?: string };
     removeItem: (id: string) => void;
     updateQuantity: (id: string, quantity: number) => void;
     clearCart: () => void;
@@ -44,18 +44,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('hanky_corner_cart', JSON.stringify(cartItems));
     }, [cartItems]);
 
-    const addItem = (item: CartItem) => {
+    const addItem = (item: CartItem): { success: boolean; message?: string } => {
+        let status = { success: true, message: '' };
+
         setCartItems(prev => {
             const existing = prev.find(i => i.product_id === item.product_id);
             if (existing) {
+                const newQuantity = existing.quantity + item.quantity;
+                if (newQuantity > item.stock) {
+                    status = { success: false, message: `Only ${item.stock} items available in stock.` };
+                    return prev;
+                }
                 return prev.map(i =>
                     i.product_id === item.product_id
-                        ? { ...i, quantity: Math.min(i.quantity + item.quantity, i.stock), stock: item.stock }
+                        ? { ...i, quantity: newQuantity, stock: item.stock }
                         : i
                 );
             }
+
+            if (item.quantity > item.stock) {
+                status = { success: false, message: `Only ${item.stock} items available in stock.` };
+                return prev;
+            }
+
             return [...prev, item];
         });
+
+        return status;
     };
 
     const removeItem = (id: string) => {
