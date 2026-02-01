@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ImageGallery } from '@/components/ImageGallery';
 import { ProductCard } from '@/components/ProductCard';
+import { getApiUrl } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useMasterSwitch } from '@/context/MasterSwitchContext';
@@ -137,7 +138,7 @@ export default function ProductDetailPage() {
     useEffect(() => {
         const fetchProductData = async () => {
             try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                const apiUrl = getApiUrl();
                 const productRes = await fetch(`${apiUrl}/api/products/${params.id}`);
                 if (!productRes.ok) {
                     if (productRes.status === 404) {

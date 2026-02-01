@@ -43,7 +43,7 @@ export function StorySection() {
                             <span className="italic text-muted-foreground font-serif">square of fabric.</span>
                         </h2>
                         <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-                            At Hanky Corner, we believe that true elegance lies in the details. A handkerchief is a subtle signal of character, a nod to tradition, and a canvas for personal expression.
+                            At {process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner"}, we believe that true elegance lies in the details. A handkerchief is a subtle signal of character, a nod to tradition, and a canvas for personal expression.
                         </p>
                         <p className="text-muted-foreground text-lg leading-relaxed">
                             Our journey began with a simple mission: to revive the lost art of the gentleman's accessory, reimagined for the modern individual who values authenticity over fast fashion.

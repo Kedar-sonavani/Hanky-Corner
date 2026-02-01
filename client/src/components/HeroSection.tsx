@@ -18,8 +18,8 @@ export function HeroSection() {
                 className="absolute inset-0 w-full h-full"
             >
                 <Image
-                    src="/thumb.png"
-                    alt="Hanky Corner Premium Editorial"
+                    src={process.env.NEXT_PUBLIC_HERO_IMAGE || "/thumb.png"}
+                    alt={`${process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner"} Premium Editorial`}
                     fill
                     className="object-cover object-center opacity-90"
                     priority

@@ -52,7 +52,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                     {/* 1. HEADER */}
                     <div className="flex justify-between items-center p-6 border-b border-white/10 relative z-20">
                         <span className="font-heading font-extrabold tracking-tighter text-2xl uppercase">
-                            Hanky <span className="italic font-serif text-white/70">Corner</span>
+                            {(process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner").split(' ')[0]} <span className="italic font-serif text-white/70">{(process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner").split(' ').slice(1).join(' ')}</span>
                         </span>
 
                         <button
@@ -106,7 +106,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                     {/* 4. WATERMARK (Fixed Size & Centered) */}
                     <div className="absolute bottom-20 left-0 right-0 z-10 pointer-events-none flex justify-center opacity-[0.03]">
                         <span className="font-black uppercase text-[12vw] leading-none whitespace-nowrap">
-                            Hanky Corner
+                            {process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner"}
                         </span>
                     </div>
                 </motion.div>

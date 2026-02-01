@@ -15,7 +15,7 @@ export function Footer() {
                     <div className="lg:col-span-5 flex flex-col items-start">
                         <Link href="/" className="inline-block mb-6">
                             <span className="font-heading font-bold tracking-tighter text-3xl md:text-4xl uppercase">
-                                Hanky <span className="italic font-serif text-accent">Corner</span>
+                                {(process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner").split(' ')[0]} <span className="italic font-serif text-accent">{(process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner").split(' ').slice(1).join(' ')}</span>
                             </span>
                         </Link>
                         <p className="text-background/60 max-w-sm text-lg leading-relaxed font-light mb-8">
@@ -67,7 +67,7 @@ export function Footer() {
 
                 {/* 3. BOTTOM BAR */}
                 <div className="flex flex-col md:flex-row justify-between items-end md:items-center text-xs text-background/30 font-mono uppercase tracking-widest border-t border-background/10 pt-8">
-                    <p>© {new Date().getFullYear()} Hanky Corner Inc.</p>
+                    <p>© {new Date().getFullYear()} {process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner"} Inc.</p>
                     <p>Crafted with Soul</p>
                 </div>
             </div>
@@ -79,7 +79,7 @@ export function Footer() {
             */}
             <div className="pointer-events-none select-none absolute bottom-6 left-0 right-0 flex justify-center w-full z-0 overflow-hidden">
                 <span className="font-black uppercase text-[12vw] leading-none text-background/[0.03] tracking-tight whitespace-nowrap">
-                    Hanky Corner
+                    {process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner"}
                 </span>
             </div>
         </footer>

@@ -15,26 +15,38 @@ app.use(helmet({
 // Basic Middleware
 app.use(express.json());
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  process.env.FRONTEND_URL
-].filter(Boolean);
+// CORS Configuration
+const getOrigins = () => {
+  const envOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
+  return [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://hanky-corner.vercel.app', // Still keep as a default for safety, but primary should be env
+    ...envOrigins
+  ];
+};
 
 app.use(cors({
   origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps or curl requests)
+    const allowed = getOrigins();
+    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('localhost:3000') || origin.includes('127.0.0.1:3000')) {
+    // Check for exact match or Vercel preview branch match
+    const isAllowed = allowed.includes(origin) || 
+                     (origin.endsWith('.vercel.app') && origin.includes('hanky-corner'));
+
+    if (isAllowed) {
       callback(null, true);
     } else {
-      console.log('CORS Blocked for origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+      console.warn(`[CORS Blocked]: ${origin}`);
+      callback(new Error('Cross-Origin Request Blocked'));
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 }));
 
 // Routes Placeholder

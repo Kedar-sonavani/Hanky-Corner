@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { ProductCard } from '@/components/ProductCard';
-import { fetchProducts } from '@/lib/api';
+import { fetchProducts, getApiUrl } from '@/lib/api';
 import { PriceFilter } from '@/components/PriceFilter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -55,8 +55,7 @@ export function CollectionsView({
     const [sortBy, setSortBy] = useState<SortOption>(initialSort);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = getApiUrl();
 
     useEffect(() => {
         const initData = async () => {

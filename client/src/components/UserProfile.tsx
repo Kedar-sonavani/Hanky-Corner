@@ -7,7 +7,7 @@ import { User, LogOut, ShoppingBag, Shield } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export function UserProfile() {
-    const { user, isAdmin, signOut } = useAuth();
+    const { user, isAdmin, signOut, loading } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -21,6 +21,12 @@ export function UserProfile() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    if (loading) {
+        return (
+            <div className="h-10 w-10 flex items-center justify-center rounded-full animate-pulse bg-zinc-100" />
+        );
+    }
+
     if (!user) {
         return (
             <Link href="/auth">
@@ -31,6 +37,9 @@ export function UserProfile() {
         );
     }
 
+    const displayName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0];
+    const initials = (user.user_metadata?.full_name?.[0] || user.email?.[0] || 'U').toUpperCase();
+
     return (
         <div className="relative" ref={containerRef}>
             <button
@@ -38,9 +47,10 @@ export function UserProfile() {
                 className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-inherit"
             >
                 <div className="h-8 w-8 rounded-full bg-zinc-900 text-white flex items-center justify-center text-[10px] font-bold">
-                    {user.email?.[0].toUpperCase()}
+                    {initials}
                 </div>
             </button>
+
 
             <AnimatePresence>
                 {isOpen && (
@@ -53,7 +63,8 @@ export function UserProfile() {
                     >
                         <div className="p-4 bg-zinc-50/50">
                             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Signed in as</p>
-                            <p className="text-sm font-bold text-zinc-900 truncate">{user.email}</p>
+                            <p className="text-sm font-bold text-zinc-900 truncate">{displayName}</p>
+                            <p className="text-[10px] text-zinc-400 truncate tracking-tight">{user.email}</p>
                         </div>
 
                         <div className="p-2 space-y-1">

@@ -10,6 +10,7 @@ import Link from 'next/link';
 
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/api';
 
 interface Category {
     id: string;
@@ -57,7 +58,7 @@ export default function AdminPage() {
     });
 
     const [catForm, setCatForm] = useState({ name: '', slug: '', description: '' });
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = getApiUrl();
 
     useEffect(() => {
         fetchCategories();

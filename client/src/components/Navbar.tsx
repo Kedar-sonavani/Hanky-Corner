@@ -58,15 +58,17 @@ export function Navbar() {
                     {/* 1. LEFT: LOGO */}
                     <div className="flex-shrink-0 z-20">
                         <Link href="/" className="flex items-center gap-2 group">
-                            {/* UPDATED: Always White */}
                             <span className={cn(
                                 "font-heading font-extrabold tracking-tighter text-2xl md:text-3xl uppercase transition-colors duration-300",
                                 isScrolled ? "text-white" : "text-black"
                             )}>
-                                Hanky <span className={cn(
+                                {(process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner").split(' ')[0]}{' '}
+                                <span className={cn(
                                     "italic font-serif transition-colors duration-300",
                                     isScrolled ? "text-white/80" : "text-black/80"
-                                )}>Corner</span>
+                                )}>
+                                    {(process.env.NEXT_PUBLIC_SITE_NAME || "Hanky Corner").split(' ').slice(1).join(' ')}
+                                </span>
                             </span>
                         </Link>
                     </div>

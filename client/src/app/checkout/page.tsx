@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { getApiUrl } from '@/lib/api';
 
 // Toast notification component (you can replace with your preferred library like sonner or react-hot-toast)
 const useToast = () => {
@@ -206,7 +207,7 @@ export default function CheckoutPage() {
         };
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = getApiUrl();
             const response = await fetch(`${apiUrl}/api/orders`, {
                 method: 'POST',
                 headers: {

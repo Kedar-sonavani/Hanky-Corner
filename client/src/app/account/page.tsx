@@ -8,6 +8,7 @@ import { Package, Truck, CheckCircle2, ShoppingBag, ArrowRight, User, LogOut, Sh
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { getApiUrl } from '@/lib/api';
 
 interface OrderItem {
     id: string;
@@ -32,7 +33,7 @@ export default function AccountPage() {
     const [orders, setProducts] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = getApiUrl();
 
     useEffect(() => {
         if (!authLoading && !user) {
