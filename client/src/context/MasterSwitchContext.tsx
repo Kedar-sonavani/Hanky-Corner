@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import { getApiUrl } from '@/lib/api';
 
 // Define context shape
 interface MasterSwitchContextType {
@@ -22,7 +23,7 @@ export const MasterSwitchProvider = ({ children }: { children: React.ReactNode }
 
     const fetchConfig = async () => {
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = getApiUrl();
             const res = await fetch(`${apiUrl}/api/settings/config`);
 
             if (!res.ok) throw new Error('Failed to fetch config');
@@ -40,7 +41,7 @@ export const MasterSwitchProvider = ({ children }: { children: React.ReactNode }
 
     const updateSettings = async (settings: { is_ecommerce_active?: boolean, whatsapp_number?: string }) => {
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = getApiUrl();
             const res = await fetch(`${apiUrl}/api/settings`, {
                 method: 'PUT',
                 headers: {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { ProductCard } from '@/components/ProductCard';
-import { fetchProducts } from '@/lib/api';
+import { fetchProducts, getApiUrl } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,8 +35,7 @@ export default function Home() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const apiUrl = getApiUrl();
 
   useEffect(() => {
     const initData = async () => {

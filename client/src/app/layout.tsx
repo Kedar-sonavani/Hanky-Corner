@@ -12,8 +12,10 @@ import { cn } from '@/lib/utils';
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-plus-jakarta' });
 
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Hanky Corner';
+
 export const metadata: Metadata = {
-  title: 'Hanky Corner | Premium Handcrafted Linens',
+  title: `${siteName} | Premium Handcrafted Linens`,
   description: 'Exquisite handcrafted pocket squares and accessories.',
 };
 

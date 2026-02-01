@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/api';
 
 interface OrderItem {
     id: string;
@@ -71,7 +72,7 @@ export default function AdminOrders() {
         }
     }, [user, isAdmin, authLoading, router]);
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = getApiUrl();
 
     const fetchOrders = async () => {
         try {

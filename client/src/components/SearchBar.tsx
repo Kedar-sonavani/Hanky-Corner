@@ -5,6 +5,7 @@ import { Search, X, Loader2, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/api';
 
 export function SearchBar() {
     const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +39,7 @@ export function SearchBar() {
             }
             setLoading(true);
             try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                const apiUrl = getApiUrl();
                 const res = await fetch(`${apiUrl}/api/products`);
                 if (res.ok) {
                     const data = await res.json();
