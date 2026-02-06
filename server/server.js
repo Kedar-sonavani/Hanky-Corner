@@ -20,8 +20,7 @@ const getOrigins = () => {
   const envOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
   return [
     'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'https://hanky-corner.vercel.app', // Still keep as a default for safety, but primary should be env
+    'http://127.0.0.1:3000', // Still keep as a default for safety, but primary should be env
     ...envOrigins
   ];
 };
@@ -53,7 +52,7 @@ app.use(cors({
 
 // Routes Placeholder
 app.get('/', (req, res) => {
-  res.send('Antigravity Server Running');
+  res.send('Server running');
 });
 
 // Routes
