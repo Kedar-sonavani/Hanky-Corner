@@ -209,21 +209,32 @@ CREATE POLICY "Admins can view order items"
   USING (auth.role() = 'authenticated');
 -- Function to decrement stock atomically
 CREATE OR REPLACE FUNCTION public.decrement_stock(product_id UUID, quantity INTEGER)
-RETURNS void AS $$
+RETURNS INTEGER AS $$
+DECLARE
+  rows_updated INTEGER := 0;
 BEGIN
+  -- Only decrement when enough stock exists to avoid negatives
   UPDATE public.products
   SET stock = stock - quantity
-  WHERE id = product_id;
+  WHERE id = product_id AND stock >= quantity;
+
+  GET DIAGNOSTICS rows_updated = ROW_COUNT;
+  RETURN rows_updated;
 END;
 $$ LANGUAGE plpgsql;
 
 -- Function to increment stock atomically
 CREATE OR REPLACE FUNCTION public.increment_stock(product_id UUID, quantity INTEGER)
-RETURNS void AS $$
+RETURNS INTEGER AS $$
+DECLARE
+  rows_updated INTEGER := 0;
 BEGIN
   UPDATE public.products
   SET stock = stock + quantity
   WHERE id = product_id;
+
+  GET DIAGNOSTICS rows_updated = ROW_COUNT;
+  RETURN rows_updated;
 END;
 $$ LANGUAGE plpgsql;
 

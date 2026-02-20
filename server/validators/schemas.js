@@ -19,7 +19,7 @@ const productSchema = z.object({
 const orderSchema = z.object({
   customer_name: z.string().min(1, "Name is required"),
   customer_email: z.string().email("Invalid email address"),
-  customer_phone: z.string().optional(),
+  customer_phone: z.string().min(1, "Phone number is required"),
   shipping_address: z.string().min(10, "Shipping address must be detailed"),
   total_price: z.number().positive(),
   items: z.array(z.object({

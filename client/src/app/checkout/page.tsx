@@ -216,20 +216,26 @@ export default function CheckoutPage() {
                 body: JSON.stringify(orderData)
             });
 
-            const data = await response.json();
-
-            if (response.ok) {
-                setOrderNumber(data.order_id || `HK${Date.now()}`);
-                setIsSuccess(true);
-                clearCart();
-                toast.success('Order placed successfully!');
-            } else {
-                const errorMessage = data.message || 'Failed to place order. Please try again.';
-                toast.error(errorMessage);
+            if (!response.ok) {
+                let errorMsg = 'Failed to place order. Please try again.';
+                try {
+                    const data = await response.json();
+                    errorMsg = data.error || errorMsg;
+                } catch {
+                    // Response was not JSON
+                }
+                toast.error(errorMsg);
+                return;
             }
-        } catch (error) {
-            console.error('Checkout error:', error);
-            toast.error('Connection error. Please check your internet and try again.');
+
+            const data = await response.json();
+            setOrderNumber(data.order_id || `HK${Date.now()}`);
+            setIsSuccess(true);
+            clearCart();
+            toast.success('Order placed successfully!');
+        } catch (error: any) {
+            console.error('❌ Order placement error:', error?.message || error);
+            toast.error(error?.message || 'Connection error. Please check if the backend server is running.');
         } finally {
             setIsSubmitting(false);
         }
