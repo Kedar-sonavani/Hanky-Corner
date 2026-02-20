@@ -35,6 +35,7 @@ router.get('/mine', authCheck, async (req, res) => {
   }
 });
 
+
 /**
  * POST /api/orders
  * Public access to place an order
@@ -43,82 +44,28 @@ router.post('/', validate(orderSchema), async (req, res) => {
   const { customer_name, customer_email, customer_phone, shipping_address, total_price, items } = req.body;
 
   try {
-    // 0. Verify stock availability for all items
-    for (const item of items) {
-      const { data: product, error: stockError } = await supabase
-        .from('products')
-        .select('stock, title')
-        .eq('id', item.product_id)
-        .single();
+    const { data: orderId, error } = await supabase.rpc('place_order', {
+      p_customer_name: customer_name,
+      p_customer_email: customer_email,
+      p_customer_phone: customer_phone,
+      p_shipping_address: shipping_address,
+      p_total_price: total_price,
+      p_items: items
+    });
 
-      if (stockError || !product) {
-        return res.status(404).json({ error: `Product ${item.title || 'Unknown'} not found` });
-      }
-
-      if (product.stock < item.quantity) {
-        return res.status(400).json({ error: `Insufficient stock for ${product.title}. Available: ${product.stock}` });
-      }
+    if (error) {
+      // Postgres automatically rolls back EVERYTHING if an error/exception is raised
+      console.error('RPC Error placing order:', error);
+      return res.status(400).json({ error: error.message });
     }
 
-    // 1. Insert into orders table
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert([{ 
-        customer_name, 
-        customer_email, 
-        customer_phone, 
-        shipping_address, 
-        total_price 
-      }])
-      .select();
-
-    if (orderError) throw orderError;
-    const newOrder = orderData[0];
-
-    // 2. Insert into order_items table
-    const orderItems = items.map(item => ({
-      order_id: newOrder.id,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      price_at_purchase: item.price,
-      product_title: item.title
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
-
-    if (itemsError) throw itemsError;
-
-    // 3. Decrement stock for all items atomically
-    const failedItems = [];
-    for (const item of items) {
-      const { data: success, error: decError } = await supabase.rpc('decrement_stock', {
-        product_id: item.product_id,
-        quantity: item.quantity
-      });
-
-      if (decError || !success) {
-        failedItems.push(item.title || item.product_id);
-      }
-    }
-
-    if (failedItems.length > 0) {
-      // If we failed to decrement some items (likely due to a race condition where stock ran out)
-      // Note: In a production app, we would ideally roll back the order insertion here.
-      // For now, we notify the user.
-      return res.status(400).json({ 
-        error: `Order partially failed: Stock for ${failedItems.join(', ')} ran out during checkout. Please contact support.`,
-        order_id: newOrder.id 
-      });
-    }
-
-    res.status(201).json({ message: 'Order placed successfully', order_id: newOrder.id });
+    res.status(201).json({ message: 'Order placed successfully', order_id: orderId });
   } catch (err) {
     console.error('Error placing order:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 /**
  * GET /api/orders
