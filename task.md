@@ -49,3 +49,5 @@
 
 
 
+## Phase 14: Documentation & Overview
+- [x] Create detailed project structure and features overview for AI relay.

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HeroSection } from '@/components/HeroSection';
-import { StorySection } from '@/components/StorySection';
+
 import { ShoppingBag } from 'lucide-react';
 
 interface Product {

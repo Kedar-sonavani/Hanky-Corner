@@ -252,6 +252,20 @@ router.patch('/:id/stock', adminCheck, async (req, res) => {
   }
 
   try {
+    // Check current stock first to prevent negative stock
+    const { data: currentProduct, error: fetchError } = await supabase
+        .from('products')
+        .select('stock')
+        .eq('id', id)
+        .single();
+    
+    if (fetchError) throw fetchError;
+    
+    const currentStock = currentProduct.stock || 0;
+    if (currentStock + adjustment < 0) {
+        return res.status(400).json({ error: 'Stock cannot be less than 0' });
+    }
+
     // We use RPC for atomic updates to avoid race conditions
     const { data, error } = await supabase.rpc('increment_stock', { 
         product_id: id, 

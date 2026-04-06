@@ -209,10 +209,16 @@ export default function AdminPage() {
             if (res.ok) {
                 fetchProducts();
             } else {
-                alert('Failed to delete product');
+                let errorMsg = 'Failed to delete product';
+                try {
+                    const data = await res.json();
+                    if (data.error) errorMsg = data.error;
+                } catch (_) {}
+                alert(errorMsg);
             }
         } catch (err) {
             console.error(err);
+            alert('An unexpected error occurred while deleting the product');
         }
     };
 
@@ -300,6 +306,7 @@ export default function AdminPage() {
                                                 onChange={e => setFormData({ ...formData, price: e.target.value })}
                                                 placeholder="999.00"
                                                 required
+                                                min="0"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -311,6 +318,7 @@ export default function AdminPage() {
                                                 onChange={e => setFormData({ ...formData, stock: e.target.value })}
                                                 placeholder="50"
                                                 required
+                                                min="0"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -540,8 +548,9 @@ export default function AdminPage() {
                                                                     <Plus size={10} />
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => handleStockAdjustment(product.id, -1)}
-                                                                    className="h-6 w-6 rounded-md bg-muted flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
+                                                                    onClick={() => product.stock > 0 && handleStockAdjustment(product.id, -1)}
+                                                                    disabled={product.stock <= 0}
+                                                                    className={`h-6 w-6 rounded-md flex items-center justify-center transition-all shadow-sm ${product.stock <= 0 ? 'bg-muted/50 text-muted-foreground/30 cursor-not-allowed' : 'bg-muted hover:bg-primary hover:text-primary-foreground'}`}
                                                                     title="Subtract 1"
                                                                 >
                                                                     <Minus size={10} />

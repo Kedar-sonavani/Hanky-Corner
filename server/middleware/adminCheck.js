@@ -6,12 +6,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
-/**
- * Middleware to verify if the user is an admin.
- * Strategies:
- * 1. Checks for a bespoke 'x-admin-secret' header (Quick MVP for "Master Switch" control).
- * 2. Verifies a Supabase JWT from the Authorization header (Robust production method).
- */
+
 const adminCheck = async (req, res, next) => {
   // Strategy 1: Simple Secret (Useful for server-to-server or initial dev)
   const adminSecret = req.headers['x-admin-secret'];
