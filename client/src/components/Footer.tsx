@@ -19,8 +19,7 @@ export function Footer() {
                             </span>
                         </Link>
                         <p className="text-background/60 max-w-sm text-lg leading-relaxed font-light mb-8">
-                            Timeless essentials for the modern wardrobe. <br />
-                            Designed in New York, worn everywhere.
+                            Timeless essentials for the modern wardrobe. 
                         </p>
 
                         <div className="flex gap-4">
