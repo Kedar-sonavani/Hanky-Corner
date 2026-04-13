@@ -30,7 +30,20 @@ const orderSchema = z.object({
   })).min(1, "Order must have at least one item")
 });
 
+// Task 3.1: createPaymentOrderSchema reuses the same shape as orderSchema
+const createPaymentOrderSchema = orderSchema;
+
+// Task 4.1: verifyPaymentSchema extends orderSchema with Razorpay payment identifiers
+const verifyPaymentSchema = z.object({
+  razorpay_order_id: z.string().min(1),
+  razorpay_payment_id: z.string().min(1),
+  razorpay_signature: z.string().min(1),
+  ...orderSchema.shape,
+});
+
 module.exports = {
   productSchema,
-  orderSchema
+  orderSchema,
+  createPaymentOrderSchema,
+  verifyPaymentSchema,
 };
