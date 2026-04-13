@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -11,6 +11,26 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
+
+// Razorpay TypeScript declarations
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  order_id: string;
+  prefill: { name: string; email: string; contact: string };
+  theme?: { color?: string };
+  handler: (response: RazorpayPaymentResponse) => void;
+  modal?: { ondismiss?: () => void };
+}
+interface RazorpayPaymentResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+interface RazorpayInstance { open(): void; }
+declare global { interface Window { Razorpay: new (options: RazorpayOptions) => RazorpayInstance; } }
 
 // Toast notification component (you can replace with your preferred library like sonner or react-hot-toast)
 const useToast = () => {
@@ -60,12 +80,22 @@ const ToastContainer = ({ toasts }: { toasts: Array<{ id: number; message: strin
 
 export default function CheckoutPage() {
     const { cartItems, cartTotal, clearCart } = useCart();
-    const { user, loading: authLoading } = useAuth();
+    const { user, session, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast, toasts } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [orderNumber, setOrderNumber] = useState('');
+    const [paymentId, setPaymentId] = useState('');
+    const [razorpayOrderData, setRazorpayOrderData] = useState<{ razorpay_order_id: string; amount: number; currency: string; key_id: string } | null>(null);
+    const orderDataRef = useRef<{
+        customer_name: string;
+        customer_email: string;
+        customer_phone: string;
+        shipping_address: string;
+        total_price: number;
+        items: { product_id: string; title: string; quantity: number; price: number }[];
+    } | null>(null);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -191,7 +221,10 @@ export default function CheckoutPage() {
         }
 
         setIsSubmitting(true);
+        await handleCreateOrder();
+    };
 
+    const handleCreateOrder = async () => {
         const orderData = {
             customer_name: formData.name.trim(),
             customer_email: formData.email.trim().toLowerCase(),
@@ -206,37 +239,128 @@ export default function CheckoutPage() {
             }))
         };
 
+        // Store for use in handleVerifyPayment
+        orderDataRef.current = orderData;
+
         try {
             const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/orders`, {
+            const response = await fetch(`${apiUrl}/api/payments/create-order`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token}`
                 },
                 body: JSON.stringify(orderData)
             });
 
-            if (!response.ok) {
-                let errorMsg = 'Failed to place order. Please try again.';
+            if (response.status === 401) {
+                router.push('/auth?redirect=/checkout');
+                return;
+            }
+
+            if (response.status === 502 || !response.ok) {
+                let errorMsg = 'Failed to initiate payment. Please try again.';
                 try {
                     const data = await response.json();
                     errorMsg = data.error || errorMsg;
-                } catch {
-                    // Response was not JSON
-                }
+                } catch { /* not JSON */ }
                 toast.error(errorMsg);
+                setIsSubmitting(false);
                 return;
             }
 
             const data = await response.json();
-            setOrderNumber(data.order_id || `HK${Date.now()}`);
-            setIsSuccess(true);
-            clearCart();
-            toast.success('Order placed successfully!');
-        } catch (error: any) {
-            console.error('❌ Order placement error:', error?.message || error);
-            toast.error(error?.message || 'Connection error. Please check if the backend server is running.');
-        } finally {
+            setRazorpayOrderData(data);
+            await openRazorpayModal(data);
+        } catch {
+            toast.error('Connection problem. Please try again.');
+            setIsSubmitting(false);
+        }
+    };
+
+    const openRazorpayModal = async (rzpData: { razorpay_order_id: string; amount: number; currency: string; key_id: string }) => {
+        // Load Razorpay script if not already loaded
+        if (!window.Razorpay) {
+            await new Promise<void>((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                script.onload = () => resolve();
+                script.onerror = () => reject(new Error('Failed to load Razorpay'));
+                document.body.appendChild(script);
+            });
+        }
+
+        const options: RazorpayOptions = {
+            key: rzpData.key_id,
+            amount: rzpData.amount,
+            currency: rzpData.currency,
+            name: 'Hanky Corner',
+            order_id: rzpData.razorpay_order_id,
+            prefill: {
+                name: formData.name,
+                email: formData.email,
+                contact: formData.phone
+            },
+            theme: { color: '#000000' },
+            handler: (response: RazorpayPaymentResponse) => {
+                handleVerifyPayment(response);
+            },
+            modal: {
+                ondismiss: () => {
+                    setIsSubmitting(false);
+                    toast.error('Payment cancelled. You can try again.');
+                }
+            }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+    };
+
+    const handleVerifyPayment = async (razorpayResponse: RazorpayPaymentResponse) => {
+        const orderData = orderDataRef.current;
+        if (!orderData) {
+            toast.error('Order data missing. Please contact support.');
+            setIsSubmitting(false);
+            return;
+        }
+
+        const verifyBody = {
+            razorpay_order_id: razorpayResponse.razorpay_order_id,
+            razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+            razorpay_signature: razorpayResponse.razorpay_signature,
+            ...orderData
+        };
+
+        try {
+            const apiUrl = getApiUrl();
+            const response = await fetch(`${apiUrl}/api/payments/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token}`
+                },
+                body: JSON.stringify(verifyBody)
+            });
+
+            if (response.status === 201) {
+                const data = await response.json();
+                setOrderNumber(data.order_id);
+                setPaymentId(data.razorpay_payment_id);
+                clearCart();
+                setIsSuccess(true);
+                return;
+            }
+
+            let errorMsg = 'Payment verification failed. Please contact support.';
+            try {
+                const data = await response.json();
+                errorMsg = data.error || data.message || errorMsg;
+            } catch { /* not JSON */ }
+            toast.error(errorMsg);
+            setIsSubmitting(false);
+        } catch {
+            toast.error('Connection problem. Please contact support.');
             setIsSubmitting(false);
         }
     };
@@ -263,8 +387,15 @@ export default function CheckoutPage() {
                         </div>
                     )}
 
+                    {paymentId && (
+                        <div className="inline-block bg-muted px-6 py-3 rounded-lg border border-border ml-4">
+                            <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">Payment ID</p>
+                            <p className="text-lg font-bold tracking-wider text-foreground">{paymentId}</p>
+                        </div>
+                    )}
+
                     <p className="text-muted-foreground text-lg max-w-md mx-auto leading-relaxed">
-                        Thank you for shopping with Hanky Corner. We've received your order and will contact you shortly for confirmation.
+                        Thank you for your payment. Your order has been confirmed and is being processed.
                     </p>
 
                     <div className="bg-card border border-border rounded-xl p-6 max-w-md mx-auto shadow-sm">
@@ -272,11 +403,11 @@ export default function CheckoutPage() {
                         <ul className="text-sm text-muted-foreground space-y-2 text-left">
                             <li className="flex items-start gap-2">
                                 <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
-                                <span>You'll receive a confirmation call within 24 hours</span>
+                                <span>Your payment has been confirmed successfully</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
-                                <span>Payment options will be discussed on the call</span>
+                                <span>Your order is now being processed</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />

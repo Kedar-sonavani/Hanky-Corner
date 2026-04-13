@@ -59,6 +59,7 @@ app.use('/api/settings', require('./routes/settings'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/payments', require('./routes/payments').router);
 
 
 // Start Server
