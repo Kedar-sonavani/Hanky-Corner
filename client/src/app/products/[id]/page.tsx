@@ -311,7 +311,7 @@ export default function ProductDetailPage() {
                             isOpen={openAccordion === 'shipping'}
                             onClick={() => toggleAccordion('shipping')}
                         >
-                            <p className="mt-2">Free shipping on all orders over ₹999. We offer a 7-day hassle-free return policy for all unused items in original packaging.</p>
+                            <p className="mt-2">Free shipping on all orders over ₹999. We offer a 14-day hassle-free return policy for all unused items in original packaging.</p>
                         </AccordionItem>
                     </div>
                 </motion.div>
