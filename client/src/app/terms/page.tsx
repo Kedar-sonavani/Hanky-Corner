@@ -51,7 +51,7 @@ export default function TermsPage() {
                             <h2 className="text-2xl font-heading font-black uppercase tracking-tight">3. Shipping & Delivery</h2>
                         </div>
                         <p className="text-zinc-600 leading-relaxed font-medium">
-                            Items are shipped within 3-5 business days. Delivery times are estimates and may vary based on your location and carrier performance. Hanky Corner is not responsible for delays caused by the shipping provider.
+                            Items are shipped within 1-2 business days. Delivery times are estimates (typically 3-5 days) and may vary based on your location and carrier performance. Hanky Corner is not responsible for delays caused by the shipping provider.
                         </p>
                     </section>
 
@@ -61,7 +61,7 @@ export default function TermsPage() {
                             <h2 className="text-2xl font-heading font-black uppercase tracking-tight">4. Returns & Refunds</h2>
                         </div>
                         <p className="text-zinc-600 leading-relaxed font-medium">
-                            Due to the handcrafted and personal nature of our products, we typically do not accept returns unless the item is defective. Please inspect your order upon reception and contact us immediately if the item is defective, damaged or if you receive the wrong item.
+                            We offer a 14-day return policy for unused items in original packaging. Please inspect your order upon reception and contact us immediately if the item is defective, damaged or if you receive the wrong item so that we can evaluate the issue and make it right.
                         </p>
                     </section>
 

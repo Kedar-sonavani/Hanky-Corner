@@ -20,7 +20,7 @@ export default function PrivacyPage() {
                     <h1 className="font-heading text-5xl md:text-6xl font-black uppercase tracking-tighter text-zinc-900">
                         Privacy Archive
                     </h1>
-                    <p className="text-zinc-400 font-bold uppercase tracking-[0.2em] text-xs">Last Updated: January 2024</p>
+                    <p className="text-zinc-400 font-bold uppercase tracking-[0.2em] text-xs">Last Updated: April 2026</p>
                 </div>
 
                 <div className="bg-white rounded-[2.5rem] shadow-xl shadow-zinc-200/50 border border-zinc-100 p-8 md:p-12 space-y-12">

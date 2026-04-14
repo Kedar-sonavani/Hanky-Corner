@@ -42,7 +42,7 @@ export default function ShippingPage() {
                             <div>
                                 <h2 className="font-heading text-2xl font-bold uppercase tracking-tight mb-3">Processing Time</h2>
                                 <p className="text-muted-foreground leading-relaxed">
-                                    All orders are processed within 2-3 business days. Orders are not shipped or delivered on weekends or holidays.
+                                    All orders are processed within 1-2 business days. Orders are not shipped or delivered on weekends or holidays.
                                     If we are experiencing a high volume of orders, shipments may be delayed by a few days.
                                 </p>
                             </div>
@@ -63,7 +63,7 @@ export default function ShippingPage() {
                                 <ul className="space-y-2 text-muted-foreground">
                                     <li className="flex items-start gap-2">
                                         <span className="text-primary mt-1">•</span>
-                                        <span><strong>Standard Shipping:</strong> 5-7 business days - ₹100</span>
+                                        <span><strong>Standard Shipping:</strong> 3-5 business days - ₹100</span>
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <span className="text-primary mt-1">•</span>
@@ -71,7 +71,7 @@ export default function ShippingPage() {
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <span className="text-primary mt-1">•</span>
-                                        <span><strong>Free Shipping:</strong> On orders above ₹2,000</span>
+                                        <span><strong>Free Shipping:</strong> On orders above ₹999</span>
                                     </li>
                                 </ul>
                             </div>
