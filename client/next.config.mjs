@@ -8,6 +8,14 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://hanky-corner.onrender.com/api/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
