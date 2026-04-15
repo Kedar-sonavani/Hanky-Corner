@@ -3,15 +3,30 @@ const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 const adminCheck = require('../middleware/adminCheck');
 
+// Initialize Supabase with basic validation
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ CRITICAL ERROR: Supabase environment variables are missing on the server!');
+}
+
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseKey || 'placeholder-key'
 );
 
 // GET /api/categories
 // Public access. Returns all categories.
 router.get('/', async (req, res) => {
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ 
+      error: 'Backend configuration error: Supabase keys are missing. Please set SUPABASE_URL and SUPABASE_SERVICE_KEY on the server.' 
+    });
+  }
+
   try {
+
     const { data, error } = await supabase
       .from('categories')
       .select('*')

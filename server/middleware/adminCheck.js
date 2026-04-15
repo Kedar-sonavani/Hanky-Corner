@@ -25,7 +25,7 @@ const adminCheck = async (req, res, next) => {
     }
 
     // Strict Admin Detection
-    const isAdmin = user.user_metadata?.role === 'admin' || user.email === 'admin@hankycorner.com';
+    const isAdmin = user.user_metadata?.role === 'admin';
     
     if (!isAdmin) {
       return res.status(403).json({ error: 'Forbidden: Admin Privileges Required' });
