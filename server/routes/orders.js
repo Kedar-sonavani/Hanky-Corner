@@ -22,7 +22,10 @@ router.get('/mine', authCheck, async (req, res) => {
       .from('orders')
       .select(`
         *,
-        order_items (*)
+        order_items (
+          *,
+          products ( images )
+        )
       `)
       .eq('customer_email', req.user.email)
       .order('created_at', { ascending: false });
@@ -77,7 +80,10 @@ router.get('/', adminCheck, async (req, res) => {
             .from('orders')
             .select(`
                 *,
-                order_items (*)
+                order_items (
+                  *,
+                  products ( images )
+                )
             `)
             .order('created_at', { ascending: false });
 

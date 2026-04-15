@@ -1,7 +1,13 @@
 export const getApiUrl = () => {
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    // Priority: 1. Environment variable, 2. Localhost fallback, 3. Relative path (production)
+    if (process.env.NEXT_PUBLIC_API_URL) {
+        return process.env.NEXT_PUBLIC_API_URL;
+    }
+    
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         return 'http://localhost:5000';
     }
+    
     return ''; // In production, use relative paths to leverage Next.js rewrites
 };
 

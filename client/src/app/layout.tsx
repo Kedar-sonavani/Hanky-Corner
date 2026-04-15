@@ -8,6 +8,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { cn } from '@/lib/utils';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-plus-jakarta' });
@@ -31,11 +32,13 @@ export default function RootLayout({
           <MasterSwitchProvider>
             <CartProvider>
               <ToastProvider>
-                <div className="relative flex min-h-screen flex-col">
-                  <Navbar />
-                  <main className="flex-1">{children}</main>
-                  <Footer />
-                </div>
+                <ErrorBoundary>
+                  <div className="relative flex min-h-screen flex-col">
+                    <Navbar />
+                    <main className="flex-1">{children}</main>
+                    <Footer />
+                  </div>
+                </ErrorBoundary>
               </ToastProvider>
             </CartProvider>
           </MasterSwitchProvider>
