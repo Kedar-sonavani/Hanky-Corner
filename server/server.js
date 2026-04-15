@@ -51,26 +51,6 @@ app.use(helmet({
 }));
 app.use(express.json());
 
-// 3. API Rate Limiting
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: 'Too many requests from this IP, please try again after 15 minutes' }
-});
-
-const criticalLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 10, // Slightly more relaxed for dev
-    message: { error: 'Too many attempts. Please try again after an hour.' }
-});
-
-// Apply rate limiting to specific routes
-app.use('/api/', apiLimiter);
-app.use('/api/orders', criticalLimiter);
-app.use('/api/payments', criticalLimiter);
-
 // Routes
 app.get('/', (req, res) => {
   res.send('Server running');

@@ -693,7 +693,7 @@ export default function AdminPage() {
                                             <button
                                                 onClick={async () => {
                                                     if (!confirm('Delete?')) return;
-                                                    const res = await fetch(`${apiUrl}/api/categories/${cat.id}`, { method: 'DELETE', headers: { 'x-admin-secret': 'AdminPASS' } });
+                                                    const res = await fetch(`${apiUrl}/api/categories/${cat.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${session?.access_token}` } });
                                                     if (res.ok) fetchCategories();
                                                 }}
                                                 className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
