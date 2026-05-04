@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mail, Lock, User, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { getURL } from '@/lib/utils';
 import Link from 'next/link';
 
 type AuthMode = 'login' | 'signup' | 'forgot';
@@ -39,14 +40,14 @@ function AuthContent() {
                         data: {
                             role: 'user'
                         },
-                        emailRedirectTo: `${window.location.origin}/auth/callback`
+                        emailRedirectTo: `${getURL()}auth/callback`
                     }
                 });
                 if (error) throw error;
                 setMessage({ type: 'success', text: 'Check your email for confirmation link!' });
             } else if (mode === 'forgot') {
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/auth/update-password`,
+                    redirectTo: `${getURL()}auth/update-password`,
                 });
                 if (error) throw error;
                 setMessage({ type: 'success', text: 'Password reset link sent to your email!' });
@@ -65,7 +66,7 @@ function AuthContent() {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: `${getURL()}auth/callback`,
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'select_account',
