@@ -35,8 +35,8 @@ router.get('/', async (req, res) => {
     if (error) throw error;
     res.json(data);
   } catch (err) {
-    console.error('Error fetching categories:', err);
-    res.status(500).json({ error: err.message });
+    console.error('[categories] Error fetching categories:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -58,8 +58,8 @@ router.post('/', adminCheck, async (req, res) => {
     if (error) throw error;
     res.status(201).json(data[0]);
   } catch (err) {
-    console.error('Error creating category:', err);
-    res.status(500).json({ error: err.message });
+    console.error('[categories] Error creating category:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -77,7 +77,8 @@ router.delete('/:id', adminCheck, async (req, res) => {
     if (error) throw error;
     res.json({ message: 'Category deleted successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[categories] Error deleting category:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -100,7 +101,8 @@ router.get('/:categoryId/products', async (req, res) => {
     const products = data.map(item => item.products);
     res.json(products);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[categories] Error fetching category products:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

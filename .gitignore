@@ -9,4 +9,4 @@ architecture_diagram.puml
 dist/
 build/
 *.log
-
+*.sql

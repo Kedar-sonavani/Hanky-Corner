@@ -24,8 +24,18 @@ const adminCheck = async (req, res, next) => {
       return res.status(401).json({ error: 'Unauthorized: Invalid Token' });
     }
 
-    // Strict Admin Detection
-    const isAdmin = user.user_metadata?.role === 'admin';
+    // Query the server-controlled profiles table (not user-editable metadata)
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return res.status(403).json({ error: 'Forbidden: Profile not found' });
+    }
+
+    const isAdmin = profile.role === 'admin';
     
     if (!isAdmin) {
       return res.status(403).json({ error: 'Forbidden: Admin Privileges Required' });

@@ -24,7 +24,7 @@ router.get('/config', async (req, res) => {
       whatsapp_number: data ? data.whatsapp_number : '917822832788'
     });
   } catch (err) {
-    console.error('Error fetching config:', err);
+    console.error('[settings] Error fetching config:', err);
     res.status(500).json({ error: 'Failed to fetch site configuration' });
   }
 });

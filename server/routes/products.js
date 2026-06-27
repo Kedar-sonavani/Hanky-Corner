@@ -56,8 +56,8 @@ router.get('/', async (req, res) => {
 
     res.json(productsWithFlags);
   } catch (err) {
-    console.error('Error fetching products:', err);
-    res.status(500).json({ error: err.message });
+    console.error('[products] Error fetching products:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -92,8 +92,8 @@ router.get('/:id', async (req, res) => {
 
     res.json(productWithFlags);
   } catch (err) {
-    console.error('Error fetching product detail:', err);
-    res.status(500).json({ error: err.message });
+    console.error('[products] Error fetching product detail:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -171,8 +171,8 @@ router.get('/:id/related', async (req, res) => {
 
     res.json(finalProducts);
   } catch (err) {
-    console.error('Related error:', err);
-    res.status(500).json({ error: err.message });
+    console.error('[products] Related error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -207,7 +207,8 @@ router.post('/', adminCheck, validate(productSchema), async (req, res) => {
 
     res.status(201).json(newProduct);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[products] Error creating product:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -251,8 +252,8 @@ router.put('/:id', adminCheck, validate(productSchema), async (req, res) => {
 
     res.json({ message: 'Product updated successfully', product: productData[0] });
   } catch (err) {
-    console.error('Update Product Error:', err);
-    res.status(500).json({ error: err.message });
+    console.error('[products] Update Product Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -309,7 +310,8 @@ router.patch('/:id/stock', adminCheck, async (req, res) => {
 
     res.json({ message: 'Stock updated successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[products] Stock adjustment error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -345,7 +347,8 @@ router.delete('/:id', adminCheck, async (req, res) => {
     if (error) throw error;
     res.json({ message: 'Product deleted successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[products] Delete product error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -6,13 +6,12 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-// Trust the first proxy in production (e.g., Render, Heroku, Vercel)
-// This is REQUIRED for rate limiting to work correctly and not block everyone if behind a load balancer
+
 app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 5000;
 
-// 1. CORS Configuration (MUST be first to handle preflight and rate-limit responses)
+
 const getOrigins = () => {
     const envOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : [];
     return [
@@ -27,11 +26,7 @@ const getOrigins = () => {
 app.use(cors({
     origin: (origin, callback) => {
         const allowed = getOrigins();
-        // Allow if:
-        // 1. Origin is missing (for server-to-server or tools like Postman)
-        // 2. Origin is in our allowed list
-        // 3. Origin is a Vercel preview branch
-        if (!origin || allowed.includes(origin) || origin.endsWith('.vercel.app')) {
+        if (!origin || allowed.includes(origin)) {
             callback(null, true);
         } else {
             console.warn(`[CORS Blocked]: ${origin} - Not in allowed list:`, allowed);
@@ -47,9 +42,23 @@ app.use(cors({
 
 // 2. Security & Parsing
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "https:", "data:"],
+        connectSrc: ["'self'", process.env.SUPABASE_URL || ''],
+      }
+    },
+    hsts: { maxAge: 31536000, includeSubDomains: true }
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
+
+// 3. Rate Limiting
+const globalLimiter = rateLimit({ windowMs: 1 * 60 * 1000, max: 100 });
+const orderLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5 });
+app.use(globalLimiter);
 
 // Routes
 app.get('/', (req, res) => {
@@ -59,8 +68,8 @@ app.get('/', (req, res) => {
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/categories', require('./routes/categories'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/payments', require('./routes/payments').router);
+app.use('/api/orders', orderLimiter, require('./routes/orders'));
+app.use('/api/payments', orderLimiter, require('./routes/payments').router);
 
 // Start Server
 app.listen(PORT, () => {

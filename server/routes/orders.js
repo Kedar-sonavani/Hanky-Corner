@@ -33,8 +33,8 @@ router.get('/mine', authCheck, async (req, res) => {
     if (error) throw error;
     res.json(data);
   } catch (err) {
-    console.error('Error fetching user orders:', err);
-    res.status(500).json({ error: err.message });
+    console.error('[orders] Error fetching user orders:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -90,8 +90,8 @@ router.get('/', adminCheck, async (req, res) => {
         if (error) throw error;
         res.json(data);
     } catch (err) {
-        console.error('Error fetching orders:', err);
-        res.status(500).json({ error: err.message });
+        console.error('[orders] Error fetching orders:', err);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -109,8 +109,8 @@ router.get('/:id/items', adminCheck, async (req, res) => {
         if (error) throw error;
         res.json(data);
     } catch (err) {
-        console.error('Error fetching order items:', err);
-        res.status(500).json({ error: err.message });
+        console.error('[orders] Error fetching order items:', err);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -135,8 +135,8 @@ router.put('/:id', adminCheck, async (req, res) => {
         if (error) throw error;
         res.json(data);
     } catch (err) {
-        console.error('Error updating order:', err);
-        res.status(500).json({ error: err.message });
+        console.error('[orders] Error updating order:', err);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
