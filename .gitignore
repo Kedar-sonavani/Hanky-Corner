@@ -12,3 +12,9 @@ build/
 *.log
 *.sql
 .kiro/
+
+# Ignored markdown files
+ADVANCED_FEATURES_SUMMARY.md
+MULTIPLE_IMAGES_FEATURE.md
+PRODUCT_DETAIL_PAGE.md
+PRODUCT_UI_IMPROVEMENTS.md
