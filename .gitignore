@@ -7,10 +7,8 @@ architecture_diagram.puml
 .gemini/
 .agent/
 .DS_Store
-dist/
+.dist/
 build/
 *.log
 *.sql
-"*.md"          
-"!README.md"    
-".kiro/"        
+.kiro/
