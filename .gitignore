@@ -3,6 +3,7 @@ node_modules/
 # AI / System Files
 architecture_diagram.puml
 *.md
+!README.md
 .gemini/
 .agent/
 .DS_Store
@@ -10,3 +11,6 @@ dist/
 build/
 *.log
 *.sql
+"*.md"          
+"!README.md"    
+".kiro/"        
