@@ -9,6 +9,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { cn } from '@/lib/utils';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-plus-jakarta' });
@@ -43,6 +44,7 @@ export default function RootLayout({
             </CartProvider>
           </MasterSwitchProvider>
         </AuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
